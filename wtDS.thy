@@ -3,6 +3,10 @@ theory wtDS
 begin
 
 
+
+
+
+
 (* Hier habe ich versucht die Theorie aus dem alten Paper von Betz 2006
 zu formalisieren: 
 *)
