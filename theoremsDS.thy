@@ -266,41 +266,4 @@ proof -
  qed
 
 
-(* Die Anzahl der Modelle einer Position ist kleiner-gleich der Summe 
-der Modelle einzelner Literale der Position *)
-lemma sigma_sum:
-  assumes "P \<noteq> {}"
-  shows "\<sigma> P ds \<le> (\<Sum>l \<in> P . (\<sigma> {l} ds))" 
-proof -
-  have "mods P ds \<subseteq> (\<Union>l \<in> P . mods {l} ds)" unfolding mods_def
-    using assms by blast 
-  moreover have "card (\<Union>l \<in> P . mods {l} ds) \<le> (\<Sum>l \<in> P . card (mods {l} ds))"
-    using  card_UN_le
-    by (metis card_UN_le finite_positions infinite_super subset_UNIV) 
-  moreover have "\<sigma> P ds \<le> card (\<Union>l \<in> P . mods {l} ds)"
-    by (metis Finite_Set.finite_set \<open>mods P ds \<subseteq> (\<Union>l\<in>P. mods {l} ds)\<close> \<sigma>_def
-        card_mono finite_positions infinite_super subset_UNIV) 
-  ultimately show ?thesis using \<open>\<sigma> P ds \<le> card (\<Union>l\<in>P. mods {l} ds)\<close>
-      \<open>card (\<Union>l\<in>P. mods {l} ds) \<le> (\<Sum>l\<in>P. card (mods {l} ds))\<close> \<sigma>_def
-    by fastforce
-qed
-
-(* Der doj einer Position ist kleiner-gleich der Summe der Modelle einzelner Literale der Position.
-
-Wenn P = {}: doj {} ds = 1 \<le> 0  !?
-*)
-theorem lte_sum:
-  assumes "P \<noteq> {}"
-  shows "doj P ds \<le> (\<Sum>l \<in> P . doj {l} ds)"
-proof - 
-  have only_sigma_relevant:  "(\<Sum>l \<in> P . doj {l} ds) = (\<Sum>l \<in> P . rat_of_nat (\<sigma> {l} ds)) / rat_of_nat (\<sigma> {} ds)"
-    by (metis (mono_tags, lifting) doj_cond_def doj_def insert_is_Un sum.cong
-          sum_divide_distrib)
-  thus ?thesis
-    by (metis (mono_tags, lifting) assms divide_right_mono doj_cond_def doj_def
-          of_nat_0_le_iff of_nat_le_iff of_nat_sum sigma_sum sum.cong
-          sup_bot.right_neutral)
-qed
-
-
 end

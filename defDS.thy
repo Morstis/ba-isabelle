@@ -68,10 +68,10 @@ definition \<sigma> :: "position \<Rightarrow> ds \<Rightarrow> nat"
 
 
 definition doj_cond :: "position \<Rightarrow> position \<Rightarrow> ds \<Rightarrow> rat"
-  where "doj_cond Q P ds =  (of_nat (\<sigma> (P \<union> Q) ds) :: rat) / ( of_nat (\<sigma> Q ds) :: rat)"
+  where "doj_cond P Q ds =  (rat_of_nat (\<sigma> (P \<union> Q) ds) ) / ( rat_of_nat (\<sigma> Q ds))"
 
 definition doj :: "position \<Rightarrow> ds \<Rightarrow> rat"
-  where "doj \<equiv> doj_cond {}"
+  where "doj P \<equiv> doj_cond P {}"
 
 definition compl_pos :: "position \<Rightarrow> position"
   where "compl_pos P = image (\<lambda>x :: literal .if x = Pos (sen x) then Neg (sen x) else Pos (sen x)) P"
