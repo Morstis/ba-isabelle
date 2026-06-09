@@ -83,20 +83,24 @@ proof -
 qed
 (*>*)
 
-text \<open>Die \<close>
+text \<open>Die Gegenrichtung gilt, wenn alle Modelle der initialen Debatte bereits die zweite Debatte erfüllen.\<close>
 lemma fullfills_ds_subset:
   assumes "\<forall>x \<in> mods P ds. x \<Turnstile> A"
   shows "mods P ds \<subseteq> mods P (ds \<union> A)"
+(*<*)
 proof
   fix x 
   assume "x \<in> mods P ds"
   thus "x \<in>  mods P (ds \<union> A)" using mods_def coherent_def 
 complete_def consistent_def assms by fastforce
 qed
+(*>*)
 
+text \<open>Das ist z.B. der Fall, wenn die neue Konklusion in der Position enthalten ist.\<close>
 lemma subset_conclusions:
   shows "mods {l} ds \<subseteq> mods {l} (ds \<union> {(ps, l)})"
 proof - 
+(*<*)
   have "\<forall>x \<in> mods {l} ds . x \<Turnstile> {(ps, l)}" 
   proof 
     fix x 
@@ -108,10 +112,13 @@ proof -
   qed
   thus ?thesis using fullfills_ds_subset by blast
 qed
+(*>*)
 
+text \<open>Oder es das Komplement einer Prämisse in der Position gibt\<close>
 lemma subset_premisses:
   assumes "\<exists>x \<in> ps . compl_lit x \<in> P"
   shows "mods P ds \<subseteq> mods P (ds \<union> {(ps, c)})"
+(*<*)
 proof -
   have "\<forall>x \<in> mods P ds . x \<Turnstile> {(ps, c)}" 
   proof
@@ -133,15 +140,12 @@ proof -
   qed
   thus ?thesis using fullfills_ds_subset by blast
 qed
+(*>*)
 
-
-
-(* 
-komplementärer Satz := Belegt den gleichen Satz unterschiedlich
-Die Vereinigung alle Modelle von komplementären Sätzen ist die Menge aller Möglichen Modelle.
-*)
+text \<open>Die Vereinigung alle Modelle von komplementären Sätzen ist die Menge aller Möglichen Modelle.\<close>
 lemma compl_sen_union:
   "mods {Pos s} ds \<union> mods {Neg s} ds = mods {} ds"
+(*<*)
 proof 
   show "mods {Pos s} ds \<union> mods {Neg s} ds \<subseteq> mods {} ds"
     by (simp add: Collect_mono mods_def)
@@ -159,11 +163,13 @@ next
       by auto
   qed
 qed
+(*>*)
 
 
-(* Die Modelle komplementären Sätzen überschneiden sich nicht *)
+text \<open>Die Modelle komplementären Sätzen überschneiden sich nicht\<close>
 lemma compl_sen_inter:
 "mods {Pos s} ds \<inter> mods {Neg s} ds = {}"
+(*<*)
 proof
   show "{} \<subseteq> mods {Pos s} ds \<inter> mods {Neg s} ds"
     by simp
@@ -179,6 +185,7 @@ next
   thus "V \<in> {}" using hneg by contradiction
     qed
   qed
+(*>*)
 
 theorem complement_eq_1:
   assumes "\<sigma> {} ds > 0"
@@ -194,5 +201,6 @@ proof -
   finally show ?thesis by simp
 qed
 
-
+(*<*)
 end
+(*>*)

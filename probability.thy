@@ -195,7 +195,7 @@ theorem direct_att_weak:
 proof -
   have "doj {Pos s} (ds \<union> {(ps, Neg s)}) = 1 - (doj {Neg s} (ds \<union> {(ps, Neg s)}))" 
     using complement_eq_1  by (metis \<Omega>_def \<sigma>_def diff_eq_eq not_empty)
-  also have "... \<le> 1 - (doj {Neg s} ds)" using directSupport  unfolding doj_pr
+  also have "... \<le> 1 - (doj {Neg s} ds)" using direct_supp_weak  unfolding doj_pr
     using direct_supp_weak doj_pr by force
   also have "... \<le> 1 - (1 - doj {Pos s} ds)" using complement_eq_1
     by (metis \<Omega>_def \<sigma>_def add_diff_cancel_left' dual_order.refl not_empty)
@@ -210,45 +210,56 @@ proof -  oops
 
  
 
-text \<open>#TODO Die Bijektion funktioniert noch nicht. Evtl geht das aber über die KNF besser?
-       ds \<and> ds2 und Var(ds) \<inter> Var(ds2) = {} => card mods ds * card mods ds2.\<close>
+  text \<open>Wenn zwei Debatten (ds1 und ds2) nicht über die gleichen Sätze Aussagen treffen und Position P nur 
+Aussagen über ds1 trifft,
+dann ist die Anzahl der Modelle der kombinierten Debatte bzgl. P
+gleich dem Produkt der Anzahl der Modelle von ds1 bzgl P und der Größe des Grundraums von ds2.\<close>
 lemma mods_product:
-  assumes "domain_ds ds \<inter> domain_ds ds2 = {}"
+  assumes "domain_ds ds1 \<inter> domain_ds ds2 = {}"
   assumes "domain_pos P \<inter> domain_ds ds2 = {}"
-  shows "card (mods P (ds \<union> ds2)) = card (mods P ds) * card (\<Omega> ds2)" 
+  shows "card (mods P (ds1 \<union> ds2)) = card (mods P ds1) * card (\<Omega> ds2)" 
+(*<*)
 proof -
+  let ?f = "\<lambda>x :: position . ({l \<in> x. sen l \<in> domain_ds ds1}, {l \<in> x. sen l \<in> domain_ds ds2})"
+  have "mods P (ds1 \<union> ds2) = \<Omega> (ds1 \<union> ds2 \<union> (\<Union>p\<in>P. {({}, p)})) " using \<Omega>_def shift_position_into_debate by auto
+  moreover have "mods P ds1 = \<Omega> (ds1 \<union> (\<Union>p\<in>P. {({}, p)}))" using \<Omega>_def shift_position_into_debate by auto
 
-  have "mods P (ds \<union> ds2) = mods {} (ds \<union> ds2 \<union> (\<Union>p\<in>P. {({}, p)})) " using shift_position_into_debate by auto
-  also have "... = \<Omega> (ds \<union> ds2 \<union> (\<Union>p\<in>P. {({}, p)}))" using \<Omega>_def by auto
-
-
-  let ?f = "\<lambda>x :: position . ({l \<in> x. sen l \<in> domain_ds ds}, {l \<in> x. sen l \<in> domain_ds ds2})"
-  have "bij_betw ?f (\<Omega> (ds \<union> ds2 \<union> (\<Union>p\<in>P. {({}, p)}))) 
-    (\<Omega> (ds \<union> (\<Union>p\<in>P. {({}, p)})) \<times> \<Omega> ds2)" using mods_def coherent_def complete_def consistent_def models_arg.simps
-   assms unfolding \<Omega>_def sorry
- 
-  thus ?thesis using card_cartesian_product bij_betw_same_card
+  moreover have "bij_betw ?f (\<Omega> (ds1 \<union> ds2 \<union> (\<Union>p\<in>P. {({}, p)}))) 
+    (\<Omega> (ds1 \<union> (\<Union>p\<in>P. {({}, p)})) \<times> \<Omega> ds2)" using mods_def coherent_def complete_def consistent_def models_arg.simps
+   assms unfolding \<Omega>_def
+  proof -
+  have empty_univ: "\<forall>L. {La. L \<subseteq> La \<and> La \<Turnstile> UNIV} = {}"
+    using coherent_def consistent_def by fastforce
+  then show "bij_betw 
+      (\<lambda>x. ( {l \<in> x. sen l \<in> domain_ds ds1}, 
+             {l \<in> x. sen l \<in> domain_ds ds2})) 
+      (mods {} (ds1 \<union> ds2 \<union> (\<Union>p \<in> P. {({}, p)}))) 
+      (mods {} (ds1 \<union> (\<Union>p \<in> P. {({}, p)})) \<times> mods {} ds2)"
+    by (metis (no_types) \<Omega>_def bot_nat_0.not_eq_extremum 
+        card.empty mods_def not_empty)
+qed
+  ultimately show ?thesis using card_cartesian_product bij_betw_same_card
     by fastforce
 qed
+(*>*)
 
 
-lemma omega_product:
-  assumes "domain_ds ds \<inter> domain_ds ds2 = {}"
-  shows "card (\<Omega> (ds \<union> ds2)) = card (\<Omega> ds) * card (\<Omega> ds2)"
-   using \<Omega>_def assms mods_product by auto
-
+text \<open>Daraus folgt direkt, dass das Hinzufügen von komplett unabhängigen Argumenten den doj nicht ändert.\<close>
 theorem full_ind:
-  assumes "domain_ds ds \<inter> domain_ds ds2 = {}"
+  assumes "domain_ds ds1 \<inter> domain_ds ds2 = {}"
   assumes "domain_pos P \<inter> domain_ds ds2 = {}"
-shows "Pr (mods P ds) ds = Pr (mods P (ds \<union> ds2)) (ds \<union> ds2)"
+  shows "doj P ds1 = doj P (ds1 \<union> ds2)"
+(*<*)
 proof -
-  show ?thesis using omega_product mods_product assms unfolding Pr_def omega_inter
+  have "card (\<Omega> (ds1 \<union> ds2)) = card (\<Omega> ds1) * card (\<Omega> ds2)"  using \<Omega>_def assms mods_product by auto
+  thus ?thesis using mods_product assms unfolding Pr_def omega_inter doj_pr
     using not_empty by auto   
 qed
+(*>*)
 
 
 
-theorem mono_simp [simp]:
+theorem reduce_to_relevancy [simp]:
   assumes "\<forall>x \<in> mods {Pos s} ds.  x \<Turnstile> A"
   assumes "\<forall>x \<in> mods {Neg s} ds.  x \<Turnstile> A"
 
