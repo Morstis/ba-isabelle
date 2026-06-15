@@ -23,6 +23,13 @@ lemma "satisfiable ds \<longleftrightarrow> card(\<Omega> ds) > 0"
 axiomatization where
   not_empty: "card (\<Omega> ds) > 0"
 
+
+lemma broken:
+  assumes "\<Omega> ds = {}"
+  shows "False"
+  using not_empty
+  using assms card_gt_0_iff by blast 
+
 text \<open>Wir definieren die normierte Funktion Pr bezüglich des Grundraums als die
 1. Philo Kardinalität einer Menge partiell kohärenter Positionen,
 2. Info Kardinalität einer Menge von partiellen Modellen.\<close>
