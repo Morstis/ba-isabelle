@@ -54,6 +54,7 @@ text \<open>Eine Position ist konsistent, wenn sie über den gleichen Satz keine
 definition consistent:: "position \<Rightarrow> bool" where
   "consistent P = (\<forall>s  . \<not>(Neg s \<in> P \<and> Pos s \<in> P))"
 
+(* Ref S. 277 *)
 typedef ccPosition  = "{P :: position. consistent P \<and> complete P}"
    using consistent_def complete_def literal.sel(1) 
    by (metis literal.disc(1) literal.disc_eq_case(2) literal.simps(6) mem_Collect_eq)
@@ -85,7 +86,7 @@ text \<open>mods gibt bezüglich einer partiellen Position P, die Menge aller vo
 Positionen an, in welchen P enthalten ist.
 \#Info mods P sind alle Modelle der Debatte, in welchen die Literale von P enthalten sind.\<close>
 definition mods :: "ccPosition  \<Rightarrow> ccPosition set" where
-"mods P  = {V . Rep_ccPosition P \<subseteq> Rep_ccPosition V \<and>  V\<Turnstile> ds}"
+"mods P = {V :: ccPosition .Rep_ccPosition P \<subseteq> Rep_ccPosition  V \<and> V \<Turnstile> ds}"
 
 abbreviation all_mods where "all_mods \<equiv> mods {}"
 
