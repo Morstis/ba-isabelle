@@ -24,30 +24,30 @@ axiomatization where
 text \<open>Ein Argument ist ein Tupel von Prämissen und einer Konklusion.\<close>
 type_synonym argument = "(literal set) \<times> literal"
 
+abbreviation fact :: "literal \<Rightarrow> argument" where "fact l \<equiv> ({},l)"
+
 text \<open>Eine Debatte ist eine Menge von Argumenten\<close>
 type_synonym ds = "argument set"
 
-text \<open>Eine Position ist eine \#Philo(Zuweisung) \#Info(Interpretation) der Literalen\<close>
+text \<open>Eine Position ist eine Menge von Literalen\<close>
 type_synonym position = "literal set"
 
 text \<open>Das Komplement eines Literal ist sein Gegenteil. (Pos -> Neg, Neg -> Pos)\<close>
-definition compl_lit :: "literal \<Rightarrow> literal"
-  where "compl_lit l = (if l = Pos (sen l) then Neg (sen l) else Pos (sen l))"
+fun compl_lit :: "literal \<Rightarrow> literal"
+  where "compl_lit (Pos s) = Neg s"
+      | "compl_lit (Neg s) = Pos s"
 
-text \<open>Das Komplement einer Position, ist die Position, die alle Literale umdreht\<close>
-definition compl_pos :: "position \<Rightarrow> position"
-  where "compl_pos P = image compl_lit P"
 
 text \<open>Die Domain einer Position / eines Arguments / einer Debatte, ist die Menge der Sätze,
 über welche Aussagen getroffen werden.\<close>
 fun domain_pos :: "position \<Rightarrow> sentence set" where
-"domain_pos P = {s. \<exists>l \<in> P . sen l = s }"
+"domain_pos P = image sen P"
 
 fun domain_arg :: "argument \<Rightarrow> sentence set"  where
-"domain_arg (ps, c) = {s. \<exists>l \<in> ps \<union> {c} . sen l = s}"
+"domain_arg (ps, c) = image sen (ps \<union> {c})"
 
 fun domain_ds :: "ds \<Rightarrow> sentence set" where
-"domain_ds ds = {s. \<exists>a \<in> ds . s \<in> domain_arg a}"
+"domain_ds ds = \<Union>(image domain_arg ds)" (* \<Union> for flattening *)
 
 text \<open>Eine Position ist vollständig, wenn sie über alle Sätze des Universums Aussagen trifft.
 \#Info Diese Anforderung macht die coherent Relation linkstotal.\<close>
@@ -68,9 +68,7 @@ fun models_arg :: "position \<Rightarrow> argument \<Rightarrow> bool"
   where "models_arg P (ps,c) = (ps \<subseteq> P \<longrightarrow> c \<in> P)"
 
 text \<open>Eine Position ist kohärent, wenn sie vollständig und konsistent ist und ebenfalls alle Argumente
-der Debatte erfüllt.
-\#Info TODO:Noch mehr ausführen)  Die Modelle können als Klauseln einer KNF verstanden werden. Wenn die Evaluationsfunktion bzgl.
-der Interpretation WAHR ausgibt, dann modelliert die Interpretation die KNF.\<close>
+der Debatte erfüllt.\<close>
 definition coherent :: "position \<Rightarrow> ds \<Rightarrow> bool" (infix "\<Turnstile>" 65)
   where "coherent P ds = (complete P \<and> consistent P  \<and> ( \<forall>a \<in> ds. models_arg P a))"
 
@@ -79,6 +77,8 @@ Positionen an, in welchen P enthalten ist.
 \#Info mods P sind alle Modelle der Debatte, in welchen die Literale von P enthalten sind.\<close>
 definition mods :: "position \<Rightarrow> ds \<Rightarrow> position set" where
 "mods P ds = {V . P \<subseteq> V \<and> V \<Turnstile> ds}"
+
+abbreviation all_mods where "all_mods \<equiv> mods {}"
 
 subsection \<open>Orginale Definitionen der DoJ\<close>
 

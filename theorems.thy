@@ -33,9 +33,9 @@ qed
 (*>*)
 
 text \<open>(informel) Eine Position kann in die Debatte übertragen werden, indem die Literale der Position
-als Konklusionen neu hinzugefügter Argumente dargestellt werden\<close>
+als Fakten in der neuen Debatte dargestellt werden\<close>
 lemma shift_position_into_debate:
-  shows "mods P ds = mods {} (ds \<union> ( \<Union>p \<in> P . {({}, p)}))"
+  shows "mods P ds = mods {} (ds \<union> ( \<Union>l \<in> P . {fact l}))"
 (*<*)
 proof (intro antisym)
  show "mods P ds \<subseteq> mods {} (ds \<union> (\<Union>p \<in> P. {({}, p)}))" 
@@ -74,7 +74,7 @@ qed
 
 text \<open>Es wäre eine echte Teilmenge, wenn es ein Modell gibt, dass die zweite Debatte nicht erfüllt\<close>
 lemma true_subset:
-  assumes "\<exists>x \<in> mods P ds1 . \<not>(x \<Turnstile> ds2)"
+  assumes "\<exists>Q \<in> mods P ds1 . \<not>(Q \<Turnstile> ds2)"
   shows "mods P (ds1 \<union> ds2) \<subset> mods P ds1"
 (*<*)
 proof -
@@ -89,13 +89,13 @@ qed
 
 text \<open>Die Gegenrichtung gilt, wenn alle Modelle der initialen Debatte bereits die zweite Debatte erfüllen.\<close>
 lemma fullfills_ds_subset:
-  assumes "\<forall>x \<in> mods P ds. x \<Turnstile> A"
-  shows "mods P ds \<subseteq> mods P (ds \<union> A)"
+  assumes "\<forall>Q \<in> mods P ds1. Q \<Turnstile> ds2"
+  shows "mods P ds1 \<subseteq> mods P (ds1 \<union> ds2)"
 (*<*)
 proof
   fix x 
-  assume "x \<in> mods P ds"
-  thus "x \<in>  mods P (ds \<union> A)" using mods_def coherent_def 
+  assume "x \<in> mods P ds1"
+  thus "x \<in>  mods P (ds1 \<union> ds2)" using mods_def coherent_def 
 complete_def consistent_def assms by fastforce
 qed
 (*>*)
@@ -120,7 +120,7 @@ qed
 
 text \<open>Oder es das Komplement einer Prämisse in der Position gibt\<close>
 lemma subset_premisses:
-  assumes "\<exists>x \<in> ps . compl_lit x \<in> P"
+  assumes "\<exists>p \<in> ps . compl_lit p \<in> P"
   shows "mods P ds \<subseteq> mods P (ds \<union> {(ps, c)})"
 (*<*)
 proof -
@@ -133,7 +133,7 @@ proof -
     hence "\<not>(ps \<subseteq> x)" 
     proof -
       have "l \<notin> x" using \<open>compl_lit l \<in> x\<close> consistent_def
-        by (metis (lifting) coherent_def compl_lit_def  i literal.exhaust_sel
+        by (metis (lifting) coherent_def compl_lit.simps  i literal.exhaust_sel
             mem_Collect_eq mods_def) 
       thus ?thesis using \<open>l \<in> ps\<close> by blast
     qed
@@ -146,7 +146,7 @@ proof -
 qed
 (*>*)
 
-text \<open>Die Vereinigung alle Modelle von komplementären Sätzen ist die Menge aller Möglichen Modelle.\<close>
+text \<open>Die Vereinigung alle Modelle von komplementären Literalen ist die Menge aller Möglichen Modelle.\<close>
 lemma compl_sen_union:
   "mods {Pos s} ds \<union> mods {Neg s} ds = mods {} ds"
 (*<*)
@@ -170,7 +170,7 @@ qed
 (*>*)
 
 
-text \<open>Die Modelle komplementären Sätzen überschneiden sich nicht\<close>
+text \<open>Die Modelle komplementären Literale überschneiden sich nicht\<close>
 lemma compl_sen_inter:
 "mods {Pos s} ds \<inter> mods {Neg s} ds = {}"
 (*<*)

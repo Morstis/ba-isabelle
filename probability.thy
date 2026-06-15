@@ -5,7 +5,7 @@ begin
 declare [[quick_and_dirty = true]]
 (*>*)
 
-section \<open>Begrundsgrade als Wahrscheinlichkeiten\<close>
+section \<open>Begründsgrade als Wahrscheinlichkeiten\<close>
 
 text \<open>Wir definieren einen Grundraum bezüglich einer Debatte.
 \#Philo Der Grundraum ist die Menge aller vollständigen kohärenten Positionen.
