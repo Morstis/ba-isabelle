@@ -1,10 +1,14 @@
+(*<*)
 theory theorems
   imports Main "HOL.Rat" definitions "HOL-Library.LaTeXsugar"
 begin
+(*>*)
 
+section "Beobachtungen"
 text \<open>Es folgen einige kleine Beobachtungen\<close>
 
 text \<open>Dadruch, dass das Universum der Sätze endlich ist, ist jede Position und die Menge der Modelle endlich.\<close>
+
 
 (*<*)
 lemma finite_positions:
@@ -56,7 +60,7 @@ qed
 
 (*>*)
 
-text \<open>Die Modelle einer erweiterten Debatte sind sind eine Teilmenge der Modelle der initialen Debatte.\<close>
+text \<open>Die Modelle einer erweiterten Debatte sind eine Teilmenge der Modelle der initialen Debatte.\<close>
 lemma subset_of_extended:
   shows "mods P (ds1 \<union> ds2) \<subseteq> mods P ds1"
 (*<*)
@@ -99,8 +103,8 @@ qed
 text \<open>Das ist z.B. der Fall, wenn die neue Konklusion in der Position enthalten ist.\<close>
 lemma subset_conclusions:
   shows "mods {l} ds \<subseteq> mods {l} (ds \<union> {(ps, l)})"
-proof - 
 (*<*)
+proof - 
   have "\<forall>x \<in> mods {l} ds . x \<Turnstile> {(ps, l)}" 
   proof 
     fix x 
@@ -190,6 +194,7 @@ next
 theorem complement_eq_1:
   assumes "\<sigma> {} ds > 0"
   shows "doj {Pos s} ds + doj {Neg s} ds = 1"
+(*<*)
 proof - 
   have "1  = doj {} ds"  by (simp add: assms doj_cond_def doj_def)
   also have "... = (((rat_of_nat(\<sigma> {} ds))) / (rat_of_nat (\<sigma> {} ds)))" 
@@ -200,7 +205,8 @@ proof -
     by (metis add_divide_distrib doj_cond_def doj_def insert_is_Un of_nat_add)
   finally show ?thesis by simp
 qed
-
+(*>*)
 (*<*)
+end
 end
 (*>*)

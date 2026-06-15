@@ -5,7 +5,9 @@ session isabell = HOL +
     "HOL-Library"
 
   theories
-    defDS
+    definitions
+    theorems 
+    probability
 
   document_files
     "root.tex"

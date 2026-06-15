@@ -1,16 +1,19 @@
+(*<*)
 theory probability
-  imports Main  "HOL.Rat" "HOL-Library.LaTeXsugar" definitions theorems
+  imports Main  "HOL.Rat" "HOL-Library.LaTeXsugar"  definitions theorems
 begin
+declare [[quick_and_dirty = true]]
+(*>*)
 
 section \<open>Begrundsgrade als Wahrscheinlichkeiten\<close>
 
 text \<open>Wir definieren einen Grundraum bezüglich einer Debatte.
-#Philo Der Grundraum ist die Menge aller vollständigen kohärenten Positionen.
-#Info Der Grundraum ist die Menge aller Modelle der Debatte\<close>
+\#Philo Der Grundraum ist die Menge aller vollständigen kohärenten Positionen.
+\#Info Der Grundraum ist die Menge aller Modelle der Debatte\<close>
 definition \<Omega> :: "ds \<Rightarrow> position set" where
   "\<Omega> ds = mods {} ds"
 
-text \<open>Der Grundraum sollte nicht leer sein. Das sollte genau dann der fall sein, wenn ds erfüllbar ist. \<close>
+text \<open>Der Grundraum sollte nicht leer sein. Das ist genau dann der Fall, wenn ds erfüllbar ist. \<close>
 lemma "satisfiable ds \<longleftrightarrow> card(\<Omega> ds) > 0" 
   (*<*)
   using satisfiable_def \<Omega>_def mods_def bot.extremum bot_nat_0.not_eq_extremum card_Diff1_less fin_mods less_nat_zero_code mem_Collect_eq
@@ -39,7 +42,7 @@ lemma omega_inter [simp]: "mods P ds \<inter> \<Omega> ds = mods P ds"
   using \<Omega>_def mods_def by auto
 (*>*)
 
-text \<open>Trivialerweise ist Pr \<in> [0, 1]\<close>
+text \<open>Trivialerweise ist Pr in [0, 1]\<close>
 lemma between0_1:
   shows "0 \<le> Pr Ps ds \<and> Pr Ps ds \<le> 1"
 (*<*)
@@ -102,6 +105,7 @@ qed
 
 text \<open>Dadurch ist Pr ein diskretes Wahrscheinlich-keitsmaß\<close>
 
+
 subsection \<open>doj ist Pr\<close>
 text \<open>Wählen wir als Ereignis die Menge aller Modelle, die Position P  erweitern (mods P ds), 
 dann ist Pr (mods P ds) ds der doj von Gregor. Gleiches gilt für die bedingen dojs\<close>
@@ -133,15 +137,19 @@ proof -
 qed
 (*>*)
 
+subsection \<open>weitere Theoreme\<close>
+
 text \<open>Es gilt der Satz der Totalen Wahrscheinlichkeit. (noch nicht bewiesen in Isabelle)\<close>
 lemma total_prob:
   assumes disjoint: "\<forall>i j. i \<noteq> j \<longrightarrow> (B i) \<inter> (B j) = {}"
   assumes fin: "finite I"
   assumes complete: "(\<Union>n \<in> I. (B n)) = \<Omega> ds"
   shows "Pr A ds = (\<Sum>n \<in> I . (Pr_cond A (B n) ds) * (Pr (B n) ds))"
+(*<*)
 proof -
-  show ?thesis sorry 
+  show ?thesis sorry
 qed
+(*>*)
 
 text \<open>Es folgt eine Anwendung des Satzes für Literale Pos s und sein Komplement Neg s\<close>
 lemma simp_total :
@@ -157,8 +165,8 @@ lemma simp_total :
       of_nat_le_0_iff of_nat_mono of_nat_mult)
   (*>*)
 
-text \<open>Die bedingte Wahrscheinlichkeit einer erweiterten Debatte ist die gleich der 
-bedingten Wahrscheinlichkeit ursprünglichen Debatte.\<close>
+text \<open>Die bedingte Wahrscheinlichkeit einer erweiterten Debatte ist gleich der 
+bedingten Wahrscheinlichkeit der ursprünglichen Debatte.\<close>
 definition jeffrey_cond :: "position set \<Rightarrow> position set \<Rightarrow> ds \<Rightarrow> ds \<Rightarrow> bool"
   where "jeffrey_cond P E ds1 ds2 = (Pr_cond P E (ds1 \<union> ds2) = Pr_cond P E ds1)"
 
@@ -203,7 +211,7 @@ proof -
 qed
 
 
-text \<open>#TODO Das Hinzuügen von indirekten Argumenten verringert den doj nicht.\<close>
+text \<open>\#TODO Das Hinzuügen von indirekten Argumenten verringert den doj nicht.\<close>
 theorem indirectSupport:
   shows "doj {l} ds \<le> doj {l} (ds \<union> {({a}, l), (ps, a)})"
 proof -  oops
@@ -257,8 +265,17 @@ proof -
 qed
 (*>*)
 
+theorem premisses_as_background:
+  assumes "doj P (ds \<union> {(ps,c)}) > doj P ds"
+  assumes "B \<subseteq> ps" 
+  shows "doj_cond P B (ds \<union> {(ps, c)}) \<ge> doj P (ds \<union> {(ps, c)})"
+(*<*)
+proof -
+show ?thesis sorry
+qed
+(*>*)
 
-
+(*<*)
 theorem reduce_to_relevancy [simp]:
   assumes "\<forall>x \<in> mods {Pos s} ds.  x \<Turnstile> A"
   assumes "\<forall>x \<in> mods {Neg s} ds.  x \<Turnstile> A"
@@ -266,7 +283,6 @@ theorem reduce_to_relevancy [simp]:
   shows "(Pr B (ds \<union> A) - Pr B (ds)) 
     = ((Pr_cond B (mods {Neg s} ds) ds) - (Pr_cond B (mods {Neg s} ds) ds))
     * ((Pr (mods {Neg s} ds) (ds \<union> A)) - Pr (mods {Neg s} ds) ds)"
-(*<*)
 proof -
   let ?ps = "mods {Pos s} (ds \<union> A)" 
   let ?ns = "mods {Neg s} (ds \<union> A)"
@@ -299,11 +315,10 @@ proof -
     by (metis Pr_def \<Omega>_def cancel_comm_monoid_add_class.diff_cancel compl_sen_union
         mult_zero_left neq peq)
 qed
-(*>*)
-
 
 
 end
+(*>*)
 
 
 
