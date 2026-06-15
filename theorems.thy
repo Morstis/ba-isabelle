@@ -10,6 +10,9 @@ text \<open>Es folgen einige kleine Beobachtungen\<close>
 text \<open>Dadruch, dass das Universum der Sätze endlich ist, ist jede Position und die Menge der Modelle endlich.\<close>
 
 
+context DoJ
+begin
+
 (*<*)
 lemma finite_positions:
   shows "finite (UNIV :: position)"
@@ -23,7 +26,7 @@ qed
 
 (*<*)
 lemma fin_mods:
-"finite (mods P ds)"
+"finite (mods P)"
 proof -
   show ?thesis
     using finite_positions
