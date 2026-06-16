@@ -2,7 +2,7 @@ theory prob_to_hol_prob
   imports Main   "HOL-Probability.Probability" probability definitions theorems 
 begin
 
-(* Dieses Theorem ist Teilweise mit Unterstützung von Claude entstanden *)
+(* Dieses Theorem ist teilweise mit Unterstützung von Claude entstanden *)
 
 definition \<mu> where "\<mu> ds Ps = 
             (if Ps \<in> Pow (\<Omega> ds) 
@@ -83,17 +83,15 @@ next
                by (metis (lifting) sum.cong)
            also have "... = ennreal (card (\<Union>(range A)))"  by (metis range_I)
            finally show ?thesis by auto
-           qed
+    qed
        
-     hence "(\<Sum>i . ennreal (real (card (A i)) / real (card (\<Omega> ds)))) = (ennreal (real (card (\<Union> (range A)))) / real (card (\<Omega> ds)))" 
+    hence "(\<Sum>i . ennreal (real (card (A i)) / real (card (\<Omega> ds)))) = (ennreal (real (card (\<Union> (range A)))) / real (card (\<Omega> ds)))" 
         by (metis (mono_tags, lifting) divide_ennreal ennreal_suminf_divide not_empty of_nat_0_le_iff
                         of_nat_0_less_iff sat suminf_cong)
      thus "(\<Sum>i . \<mu> ds (A i)) = (\<mu> ds (\<Union> (range A)))"  using simp_l simp_r
            by order
    qed
  qed
- find_theorems "ennreal" "sum"
-
 
 lemma compl_0:
   shows "(\<forall>a \<in> -(Pow (\<Omega> ds)) . \<mu> ds a = 0)"
@@ -122,34 +120,31 @@ qed
 
 
 interpretation x: prob_space "ds_measure ds"
-proof -
-  have "emeasure (ds_measure ds) (space (ds_measure ds)) = 1" 
-    using sum1 by auto
-  moreover have "emeasure (ds_measure ds) (space (ds_measure ds)) \<noteq> \<top>" 
-    using calculation by simp
-  moreover have " \<exists>A. countable A \<and>
+proof (unfold_locales)
+  show "emeasure (ds_measure ds) (space (ds_measure ds)) = 1" 
+    by (simp add: sum1)
+next
+  show "emeasure (ds_measure ds) (space (ds_measure ds)) \<noteq> \<top>" 
+    by (simp add: sum1)
+next
+  show " \<exists>A. countable A \<and>
         A \<subseteq> sets (ds_measure ds) \<and>
         \<Union> A = space (ds_measure ds) \<and> (\<forall>a\<in>A. emeasure (ds_measure ds) a \<noteq> \<infinity>)" 
-proof -
-  show ?thesis
-  proof (intro exI[of _ "{\<Omega> ds}"] conjI)
-    show "countable {\<Omega> ds}"
-      by simp
-  next
-    show "{\<Omega> ds} \<subseteq> sets (ds_measure ds)"
-      unfolding ds_measure_def sets_def using inv
-      by simp
-  next
-    show "\<Union> {\<Omega> ds} = space (ds_measure ds)"
-      unfolding ds_measure_def space_def using inv
-      by simp
-  next
-    show "\<forall>a \<in> {\<Omega> ds}. emeasure (ds_measure ds) a \<noteq> \<infinity>" 
-      by (simp add: \<mu>_def ds_measure_def emeasure_def inv)
-  qed
-qed
-
-  ultimately show "prob_space (ds_measure ds)" by unfold_locales
-qed
+      proof (intro exI[of _ "{\<Omega> ds}"] conjI)
+        show "countable {\<Omega> ds}"
+          by simp
+      next
+        show "{\<Omega> ds} \<subseteq> sets (ds_measure ds)"
+          unfolding ds_measure_def sets_def using inv
+          by simp
+      next
+        show "\<Union> {\<Omega> ds} = space (ds_measure ds)"
+          unfolding ds_measure_def space_def using inv
+          by simp
+      next
+        show "\<forall>a \<in> {\<Omega> ds}. emeasure (ds_measure ds) a \<noteq> \<infinity>" 
+          by (simp add: \<mu>_def ds_measure_def emeasure_def inv)
+      qed
+    qed
 end
 end
