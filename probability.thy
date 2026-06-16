@@ -1,6 +1,6 @@
 (*<*)
 theory probability
-  imports Main  "HOL.Rat" "HOL-Library.LaTeXsugar"  definitions theorems
+  imports Main  "HOL.Rat" "HOL-Library.LaTeXsugar"  definitions theorems 
 begin
 declare [[quick_and_dirty = true]]
 (*>*)
@@ -127,6 +127,7 @@ subsection \<open>weitere Theoreme\<close>
 
 text \<open>Es gilt der Satz der Totalen Wahrscheinlichkeit. (noch nicht bewiesen in Isabelle)\<close>
 lemma total_prob:
+  assumes sat: "satisfialbe ds"
   assumes disjoint: "\<forall>i j. i \<noteq> j \<longrightarrow> (B i) \<inter> (B j) = {}"
   assumes fin: "finite I"
   assumes complete: "(\<Union>n \<in> I. (B n)) = \<Omega> ds"
