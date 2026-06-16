@@ -38,55 +38,61 @@ next
     assume disjoint:   "disjoint_family A"
     assume union_in:   "\<Union> (range A) \<in> Pow (\<Omega> ds)"
 
-
     have fin: "finite (range A)" using range_sub \<Omega>_def fin_mods
       by (simp add: finite_subset) 
 
-
-    have fst_if: "\<forall>i . A i \<in> Pow (\<Omega> ds)" 
+    have "\<forall>i . A i \<in> Pow (\<Omega> ds)" 
       using union_in by fastforce
-    hence s:"(\<Sum>i . \<mu> ds (A i)) = (\<Sum>i . ennreal (real (card (A i)) / real (card (\<Omega> ds))))" 
+    hence simp_l:"(\<Sum>i . \<mu> ds (A i)) = (\<Sum>i . ennreal (real (card (A i)) / real (card (\<Omega> ds))))" 
       unfolding \<mu>_def by simp
 
-    have u: "\<mu> ds (\<Union> (range A)) = (ennreal (real (card (\<Union> (range A)))) / real (card (\<Omega> ds)))"
+    have simp_r: "\<mu> ds (\<Union> (range A)) = (ennreal (real (card (\<Union> (range A)))) / real (card (\<Omega> ds)))"
       unfolding \<mu>_def using union_in
       using divide_ennreal not_empty sat by auto
 
-     have "(\<Sum>i . ennreal (real (card (A i)) / real (card (\<Omega> ds)))) 
-        = (ennreal (real (card (\<Union> (range A)))) / real (card (\<Omega> ds)))" 
-     proof -
-       have "(\<Sum>i . (ennreal (card (A i)))) = (ennreal (card (\<Union> (range A))))" 
-       proof -
+    have "(\<Sum>i . (ennreal (card (A i)))) = (ennreal (card (\<Union> (range A))))" 
+    proof -
+           have dis: "\<forall>i j. i \<noteq> j \<longrightarrow> A i \<inter> A j = {}" using disjoint by (simp add: disjoint_family_onD)
+           hence fin_all: "\<forall>i . finite (A i)" using fin_mods \<Omega>_def
+              by (meson Finite_Set.finite_set finite_positions finite_subset subset_UNIV) 
            obtain I :: "nat set" where fin_I: "finite I" and range_I: "range A = image A I"
              by (meson fin finite_subset_image subset_refl)
-
-           have dis: "\<forall>i j. i \<noteq> j \<longrightarrow> A i \<inter> A j = {}" using disjoint by (simp add: disjoint_family_onD)
-           have  "finite (\<Union> (range A))"
-              by (metis Pow_iff \<Omega>_def fin_mods finite_subset union_in)
-           hence fin_all: "\<forall>i . finite (A i)" using fin_mods \<Omega>_def
-              by (meson Finite_Set.finite_set finite_positions finite_subset
-                  subset_UNIV) 
-
-            have r: "(\<Sum>i. ennreal (real (card (A i)))) = (ennreal (real (\<Sum>i. card (A i))))" 
-              using ennreal_suminf_neq_top sorry
-            
-             have s_eq:  "(\<Sum>i. (card (A i))) = (\<Sum>i \<in> I . card ((A i)))"
-               using ennreal_suminf_neq_top suminf_finite sorry
-             also have "... = card (\<Union>i \<in> I . (A i))" using card_UN_disjoint fin dis fin_I fin_all
+           hence "(\<Sum>i . (ennreal (card (A i)))) = (\<Sum>i \<in> I. ennreal (card (A i)))"
+           proof (intro antisym)   
+             show "(\<Sum>i\<in>I. ennreal (real (card (A i)))) \<le> (\<Sum>i. ennreal (real (card (A i))))"
+               using fin_I sum_le_suminf by (metis summableI zero_order(1))
+             next
+               show "(\<Sum>i . ennreal (real (card (A i)))) \<le> (\<Sum>i \<in> I. ennreal (real (card (A i))))" 
+               proof -
+                 have "\<forall>x \<in> -I . ennreal (real (card (A x))) = 0" 
+                 proof
+                   fix x
+                   assume "x \<in> -I"
+                   hence "A x = {}" using range_I 
+                     by (metis (no_types, opaque_lifting) ComplD all_not_in_conv bex_imageD dis disjoint_iff
+                         rangeI)
+                   thus "ennreal (real (card (A x))) = 0" by simp
+                 qed
+                 thus ?thesis 
+                   by (metis (no_types, lifting) Compl_iff fin_I order_refl suminf_finite)
+               qed
+           qed
+           also have "... = ennreal (\<Sum>i \<in> I. (card (A i)))"
+             using sum_ennreal by auto
+           also have "... = ennreal (card (\<Union>i \<in> I . (A i)))" using card_UN_disjoint fin dis fin_I fin_all
                by (metis (lifting) sum.cong)
-             also have "... = (card (\<Union>(range A)))"  by (metis range_I)
-             finally have "(\<Sum>i. (card (A i))) = (card (\<Union>(range A)))" by auto
-             thus ?thesis  
-               using ennreal_of_nat_eq_real_of_nat r by metis
-       qed
-        thus ?thesis
-          by (metis (mono_tags, lifting) divide_ennreal ennreal_suminf_divide not_empty of_nat_0_le_iff
-              of_nat_0_less_iff sat suminf_cong)
-     qed
-     thus "(\<Sum>i . \<mu> ds (A i)) = (\<mu> ds (\<Union> (range A)))"  using u s
+           also have "... = ennreal (card (\<Union>(range A)))"  by (metis range_I)
+           finally show ?thesis by auto
+           qed
+       
+     hence "(\<Sum>i . ennreal (real (card (A i)) / real (card (\<Omega> ds)))) = (ennreal (real (card (\<Union> (range A)))) / real (card (\<Omega> ds)))" 
+        by (metis (mono_tags, lifting) divide_ennreal ennreal_suminf_divide not_empty of_nat_0_le_iff
+                        of_nat_0_less_iff sat suminf_cong)
+     thus "(\<Sum>i . \<mu> ds (A i)) = (\<mu> ds (\<Union> (range A)))"  using simp_l simp_r
            by order
    qed
  qed
+ find_theorems "ennreal" "sum"
 
 
 lemma compl_0:
