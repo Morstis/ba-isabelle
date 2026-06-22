@@ -5,6 +5,10 @@ begin
 (* Dieses Theorem ist teilweise mit Unterstützung von Claude entstanden.
 Auch wenn die Arbeit mit Claude eine große Katastrophe ist... *)
 
+consts dds :: "ds" where "satisfiable ds"
+
+definition dds :: "ds"
+  where "dds = (SOME x. satisfiable x)"
 
 locale prob_DoJ = 
   fixes ds :: "ds"
@@ -166,6 +170,7 @@ proof -
         ennreal_neg model_space.emeasure_eq_measure of_nat_0 of_nat_le_0_iff
         of_rat_divide of_rat_of_nat_eq of_real_divide of_real_of_nat_eq)
 qed
+abbreviation prob where "prob \<equiv> model_space.prob"
 
 end
 
@@ -180,7 +185,8 @@ lemma total_prob:
 proof -
   interpret prob_DoJ ds using sat by unfold_locales
   (* Das hier möche ich machen können *)
-  have "Pr A ds = prob_DoJ.model_space.prob A" using prob_DoJ.pr_prob_eq by auto
+  have "Pr A ds = prob A" using pr_prob_eq 
+    by presburger
   show ?thesis sorry
 qed
 end
