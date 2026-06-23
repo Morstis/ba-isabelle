@@ -2,12 +2,13 @@
 theory newDefinitions
   imports Main "HOL.Rat" "HOL-Library.LaTeXsugar" "HOL-Probability.Probability"  base 
 begin
-(*>*)
 
+declare [[quick_and_dirty = true]]
 notation
    card (\<open>| _ |\<close>)
-
+(*>*)
 (* Ref Isar S. 277 *)
+text \<open>Wir definieren den Typen ccPosition als eine Position, die complete und konsistent ist.\<close>
 typedef ccPosition  = "{P :: position. consistent P \<and> complete P}"
    using consistent_def complete_def literal.sel(1) 
    by (metis literal.disc(1) literal.disc_eq_case(2) literal.simps(6) mem_Collect_eq)
@@ -29,127 +30,101 @@ definition satisfiable :: "ds \<Rightarrow> bool"
   where "satisfiable ds = (\<exists>P . P \<Turnstile> ds)"
 
 
-text \<open>mods gibt bezüglich einer partiellen Position P, die Menge aller vollständigen, kohärenten
-Positionen an, in welchen P enthalten ist.
-\#Info mods P sind alle Modelle der Debatte, in welchen die Literale von P enthalten sind.\<close>
-definition mods :: "position \<Rightarrow> ds \<Rightarrow> ccPosition set" where
-"mods P ds = {V :: ccPosition . P \<subseteq> Rep_ccPosition V \<and> V \<Turnstile> ds}"
-
-text \<open>Der Grundraum ist die Menge aller vollständig, konsistenten Positionen\<close>
+text \<open>Wir wählen den Grundraum als die Menge aller vollständig, konsistenten Positionen\<close>
 type_alias \<Omega> = "ccPosition"
 definition \<Omega> where "\<Omega> = (UNIV :: \<Omega> set)"
 
+
 text \<open>Die Positionen sind endlich\<close>
-lemma finite_positions:
-  shows "finite (UNIV :: position)"
+lemma finite_positions:  "finite (UNIV :: position)"
+(*<*)
 proof -
   have "((UNIV :: literal set) = range Pos \<union> range Neg)"
     by (metis literal.exhaust UNIV_eq_I Un_iff rangeI)
   thus ?thesis
     using finsen by (metis finite_Un finite_imageI) 
 qed
+(*>*)
 
 text \<open>Der Grundraum ist endlich => Wir befinden uns im diskreten Fall\<close>
 lemma \<Omega>_fin: "finite \<Omega>"
+(*<*)
   using finite_positions \<Omega>_def
   by (metis (full_types) Finite_Set.finite_set Rep_ccPosition_inverse UNIV_I
       ex_new_if_finite finite_imageI image_eqI)
+(*>*)
 
-
-text \<open>Der Träger von Pr bzw. f ist definiert als\<close>
+text \<open>Wir definieren @{term "\<Omega>\<^sub>T"} als Untermenge von @{term "\<Omega>"}, sodass alle @{term "p \<in> \<Omega>\<^sub>T"} zusätzlich die Debatte erfüllen.
+Das sind alle Modelle der Debatte.\<close>
 definition \<Omega>\<^sub>T where "\<Omega>\<^sub>T ds = {p :: \<Omega> . p \<Turnstile> ds}"
 
+(*<*)
 lemma \<Omega>\<^sub>T_fin: "finite (\<Omega>\<^sub>T ds)" using \<Omega>_fin 
   using \<Omega>_def rev_finite_subset by auto
+(*>*)
 
-text \<open>Wir definieren die Wahrscheinlichkeitsfunkion / Dichte als Gleichverteilung.
-Dabei werden alle nicht kohärenten Positionen nicht betrachtet. \<close>
+text \<open>Wir definieren die Wahrscheinlichkeitsfunkion bzw. Dichte als Gleichverteilung.
+Dabei werden alle nicht kohärenten Positionen nicht betrachtet. (of\_bool ist definiert als @{term "if P \<Turnstile> ds then 1 else 0"})\<close>
 definition f :: " \<Omega> \<Rightarrow> ds \<Rightarrow> ennreal"
-  where "f P ds = (if (P \<Turnstile> ds) then  1 / |\<Omega>\<^sub>T ds| else 0)"
+  where "f P ds = (1 / |\<Omega>\<^sub>T ds| ) * of_bool (P \<Turnstile> ds)"
 
-text \<open>Damit ist Pr ganz kanonisch das diskrete Wahrscheinlichkeitsmaß\<close>
-definition Pr :: "\<Omega> set \<Rightarrow> ds  \<Rightarrow> ennreal"
-  where "Pr Ps ds= (\<Sum> p \<in> Ps. f p ds)"
+text \<open>Damit ist Pr ganz kanonisch genau das diskrete Wahrscheinlichkeitsmaß bzgl. f\<close>
+definition Pr :: "\<Omega> set \<Rightarrow> ds \<Rightarrow> ennreal"
+  where "Pr Ps ds = (\<Sum> p \<in> Ps. f p ds)"
+
+text \<open>doj lässt sich damit sehr einfach über Pr definieren.\<close>
+definition doj :: "position \<Rightarrow> ds \<Rightarrow> ennreal"
+  where "doj p ds = Pr {x \<in> \<Omega> . p \<subseteq> Rep_ccPosition x} ds"
 
 
-text \<open>Der Trager ist die Menge aller Modelle von ds\<close>
-lemma "\<Omega>\<^sub>T ds = {p :: \<Omega> . f p ds > 0}" using mods_def \<Omega>\<^sub>T_def f_def 
+text \<open>@{term "\<Omega>\<^sub>T"} ist der Träger von Pr bzw. f\<close>
+lemma "\<Omega>\<^sub>T ds = {p :: \<Omega> . f p ds > 0}" 
+(*<*)
 proof -
-  have "\<forall>p . f p ds > 0 \<longleftrightarrow> p \<Turnstile> ds" using \<Omega>\<^sub>T_def f_def \<Omega>_fin 
-    by (metis (mono_tags, lifting) \<Omega>_def card_gt_0_iff empty_iff
-        ennreal_less_zero_iff ennreal_of_nat_eq_real_of_nat finite_subset gr_zeroI
-        mem_Collect_eq of_nat_0_eq_iff rel_simps(70) subset_UNIV
+  have "\<forall>p . f p ds > 0 \<longleftrightarrow> p \<Turnstile> ds" using \<Omega>\<^sub>T_def f_def \<Omega>_fin of_bool_def
+    by (metis Collect_empty_eq \<Omega>\<^sub>T_fin card_gt_0_iff ennreal_less_zero_iff
+        more_arith_simps(6) mult_zero_right of_nat_0_less_iff rel_simps(70)
         zero_less_divide_1_iff)
   thus ?thesis using \<Omega>\<^sub>T_def by simp
 qed
+(*>*)
 
-
+text \<open>Wir fixieren eine ds und nehmen an, dass diese erfüllbar ist\<close>
+(*<*)
 locale prob_DoJ = 
+(*>*)
   fixes ds :: "ds"
   assumes sat: "satisfiable ds"
 
+(*<*)
 context prob_DoJ
 begin
-
+(*>*)
 abbreviation \<mu> where "\<mu> p \<equiv> Pr p ds"
 
-definition ds_measure :: "\<Omega> measure" where
-  "ds_measure =  Abs_measure (\<Omega>, Pow \<Omega>, \<mu>)"    
+(*<*)
+abbreviation ds_measure :: "\<Omega> measure" where
+  "ds_measure \<equiv> measure_of \<Omega> (Pow \<Omega>) \<mu>"
 
-(* Elemente außerhalb des Sigma-Raums sind null.*)
-lemma compl_0:
-  shows "(\<forall>a \<in> -(Pow \<Omega>) . \<mu> a = 0)"
-proof 
-  fix a :: "\<Omega> set"
-  assume "a \<in> -(Pow (\<Omega>))"
-  hence "\<forall>p \<in> a . \<not>(p \<Turnstile> ds)" using coherent_def by (simp add: \<Omega>_def)
-  hence "\<forall>p \<in> a .  f p ds = 0" using f_def by simp 
-  thus "\<mu> a = 0" using Pr_def by simp
-qed
-
-
-(* Unsere Definition ist tatsächlich ein measure-soace *)
-lemma mes_space: 
-  shows "measure_space \<Omega> (Pow \<Omega>) \<mu>"
-proof (unfold measure_space_def, intro conjI)
-  show "sigma_algebra \<Omega> (Pow \<Omega>)"
-    by (simp add: sigma_algebra_Pow) 
-next
-  show "positive (Pow \<Omega>) \<mu>" unfolding positive_def using Pr_def by simp 
-next 
-  show "countably_additive (Pow \<Omega>) \<mu>" 
-  proof (unfold countably_additive_def, intro allI impI)
-    fix A :: "nat \<Rightarrow> \<Omega> set"
-    assume range_sub:  "range A \<subseteq> Pow \<Omega>"
-    assume disjoint:   "disjoint_family A"
-    assume union_in:   "\<Union> (range A) \<in> Pow \<Omega>"
-    show "(\<Sum>i . \<mu> (A i)) = (\<mu> (\<Union> (range A)))" sorry
-  qed
-qed
-
-
-(* Es gibt einen Isomorphismus zwischen unserem Raum und dem allgemeinen mes_space *)
-lemma inv: 
-  "Rep_measure (Abs_measure (\<Omega>, Pow \<Omega>, \<mu>)) = (\<Omega>, Pow \<Omega>, \<mu>)"
-  using Abs_measure_inverse mes_space compl_0 
-  by (smt (verit) case_prod_conv mem_Collect_eq)
-
+lemma denom_nn: "| \<Omega>\<^sub>T ds | > 0" using sat \<Omega>\<^sub>T_def unfolding satisfiable_def 
+        using \<Omega>\<^sub>T_fin card_gt_0_iff by blast
+(*>*)
+text \<open>Offensichtlich ist die Summe des Grundraums 1\<close>
 lemma \<mu>_sum: "\<mu> \<Omega> = 1"
+(*<*)
 proof -
   let ?x = "(\<Omega>\<^sub>T ds)"
     have t_sum: "\<mu> ?x = 1" 
     proof -
-      have nn: "card ?x > 0" using sat \<Omega>\<^sub>T_def unfolding satisfiable_def 
-        using \<Omega>\<^sub>T_fin card_gt_0_iff by blast
       have "\<forall>p \<in> ?x . p \<Turnstile> ds" using \<Omega>\<^sub>T_def by simp
-      hence "\<forall>p \<in> ?x . f p ds = (1 / real | ?x | )" using f_def by presburger
+      hence "\<forall>p \<in> ?x . f p ds = (1 / real | ?x | )" using f_def of_bool_def by simp
       hence "\<mu> ?x = (\<Sum>p \<in> ?x . (1 / card ?x ))" unfolding Pr_def
-        by (smt (verit, best) nn of_nat_0_less_iff sum.cong sum_ennreal
+        by (smt (verit, best) denom_nn of_nat_0_less_iff sum.cong sum_ennreal
             zero_less_divide_1_iff)
       also have "... = (1 / card ?x) * (\<Sum>p \<in> ?x . 1)" by simp
       also have "... = (1 / card ?x  ) * card ?x " by simp
-      finally show ?thesis using nn by auto
-     qed
+      finally show ?thesis using denom_nn by auto
+    qed
 
     have "\<forall>x \<in> (\<Omega> - \<Omega>\<^sub>T ds) . \<not>(x \<Turnstile> ds)" using \<Omega>\<^sub>T_def by simp
     hence nt_0: "\<forall>x \<in> (\<Omega> - \<Omega>\<^sub>T ds) . f x ds = 0" using f_def by simp
@@ -160,17 +135,111 @@ proof -
     also have  "... = \<mu> ?x" using Pr_def by simp
     finally show ?thesis using t_sum by simp
   qed
+(*>*)
+
+text \<open>Es gilt die @{term "\<sigma>"}-Additivität für @{term "\<mu>"}.\<close>
+lemma sigma_sum: "countably_additive (Pow \<Omega>) \<mu>" 
+proof (unfold countably_additive_def, intro allI impI)
+    fix A :: "nat \<Rightarrow> \<Omega> set"
+    assume range_sub:  "range A \<subseteq> Pow \<Omega>"
+    assume disjoint:   "disjoint_family A"
+    assume union_in:   "\<Union> (range A) \<in> Pow \<Omega>"
+(*<*)
+    have move_norm: "\<forall>x . \<mu> x = (1 / | \<Omega>\<^sub>T ds | ) * ennreal (\<Sum>p\<in>x. of_bool (p \<Turnstile> ds))"
+    proof 
+      fix x
+      have "\<mu> x = ennreal (\<Sum>p\<in>x. (1 / real | \<Omega>\<^sub>T ds | * of_bool (p \<Turnstile> ds)))" 
+        unfolding Pr_def f_def by simp
+      also have "... = ennreal (1 / | \<Omega>\<^sub>T ds | ) * (\<Sum>p\<in>x. of_bool (p \<Turnstile> ds))" 
+        using ennreal_suminf_cmult 
+        by (smt (verit) Num.of_nat_simps(2,5) Pr_def calculation ennreal_0 f_def more_arith_simps(6) mult_eq_0_iff
+            of_bool_eq(1) of_bool_eq_1_iff sum.cong sum_distrib_left times_divide_eq_left)
+      also have "... = (1 / | \<Omega>\<^sub>T ds | ) * ennreal (\<Sum>p\<in>x. of_bool (p \<Turnstile> ds))" 
+        by (smt (verit, ccfv_SIG) ennreal_0 ennreal_1 of_bool_eq(1,2) sum.cong sum_ennreal)
+      finally show "\<mu> x = (1 / | \<Omega>\<^sub>T ds | ) * ennreal (\<Sum>p\<in>x. of_bool (p \<Turnstile> ds))" by auto
+  qed
+
+    hence simp_u: "(\<mu> (\<Union> (range A))) = (1 / real | \<Omega>\<^sub>T ds | * ennreal (\<Sum>p\<in>\<Union> (range A). of_bool (p \<Turnstile> ds)))"
+      unfolding Pr_def f_def using ennreal_suminf_cmult by presburger
+    have simp_s: "(\<Sum>i . \<mu> (A i)) = (1 / real | \<Omega>\<^sub>T ds | ) * (\<Sum>i. ennreal (\<Sum>p\<in>A i. of_bool (p \<Turnstile> ds)))" 
+       using move_norm ennreal_suminf_cmult unfolding Pr_def f_def by presburger
+ 
+    have "(\<Sum>i. ennreal (\<Sum>p\<in>A i. of_bool (p \<Turnstile> ds))) = ennreal (\<Sum>p\<in>\<Union> (range A). of_bool (p \<Turnstile> ds))"
+    proof -
+     have t_partition: "\<forall>i . A i = (\<Omega>\<^sub>T ds \<inter> A i) \<union> ((\<Omega> - \<Omega>\<^sub>T ds) \<inter> A i)"
+        using \<Omega>\<^sub>T_def \<Omega>_def by auto
 
 
-(* Hier die Brücke zu HOL-Probability. Damit ist unsere Definition ein prob_space *)
-interpretation model_space: prob_space "ds_measure"
 
-proof (intro prob_spaceI)
-  have "\<mu> \<Omega> = 1" using \<mu>_sum by simp
-  thus "emeasure ds_measure (space ds_measure) = 1" using emeasure_def space_def inv 
-    by (metis ds_measure_def fst_conv snd_conv)
+    have "(\<Sum>p\<in>\<Union>(range A). of_bool (p \<Turnstile> ds)) = card (\<Union>i. (\<Omega>\<^sub>T ds \<inter> A i))"
+    proof -
+       have fin_parts: "finite (\<Union> i . (\<Omega>\<^sub>T ds \<inter> A i))"
+          using \<Omega>\<^sub>T_fin disjoint disjoint_family_on_def by simp
+       have fin_parts2: "finite (\<Union> i . ((\<Omega> - \<Omega>\<^sub>T ds) \<inter> A i))"
+         using \<Omega>_fin disjoint disjoint_family_on_def by simp
+
+       have "(\<Sum>p\<in>\<Union>(range A). of_bool (p \<Turnstile> ds)) = (\<Sum>p \<in> (\<Union>i. A i) . of_bool (p \<Turnstile> ds))" by auto
+        also have "... = (\<Sum>p \<in> (\<Union>i. (\<Omega>\<^sub>T ds \<inter> A i) \<union> ((\<Omega> - \<Omega>\<^sub>T ds) \<inter> A i)) . of_bool (p \<Turnstile> ds))" 
+          using t_partition by simp
+        also have "... = (\<Sum>p \<in> ((\<Union>i. (\<Omega>\<^sub>T ds \<inter> A i)) \<union> (\<Union> i. ((\<Omega> - \<Omega>\<^sub>T ds) \<inter> A i))) . of_bool (p \<Turnstile> ds))"
+          by (metis Un_Union_image)
+        also have  "...
+            = (\<Sum>p\<in> (\<Union>i. (\<Omega>\<^sub>T ds \<inter> A i)). of_bool (p \<Turnstile> ds))
+            + (\<Sum>p\<in> (\<Union>i. ((\<Omega> - \<Omega>\<^sub>T ds) \<inter> A i)) . of_bool (p \<Turnstile> ds))"
+          using fin_parts fin_parts2 sum.union_disjoint t_partition by blast
+        also have "... = (\<Sum>p\<in> (\<Union>i. (\<Omega>\<^sub>T ds \<inter> A i)). of_bool (p \<Turnstile> ds))"
+          using t_partition \<Omega>\<^sub>T_def by simp
+        also have "... = (\<Sum>p\<in> (\<Union>i. (\<Omega>\<^sub>T ds \<inter> A i)). 1)"
+          using \<Omega>\<^sub>T_def by auto
+        also have "... = card (\<Union>i. (\<Omega>\<^sub>T ds \<inter> A i))" by simp
+        finally show ?thesis by auto
+      qed
+    moreover have  "\<forall>i . (\<Sum>p\<in>A i. of_bool (p \<Turnstile> ds)) = card (\<Omega>\<^sub>T ds \<inter> A i)"
+      proof
+       fix i
+      have "(\<Sum>p\<in>A i. of_bool (p \<Turnstile> ds)) = (\<Sum>p \<in> (\<Omega>\<^sub>T ds \<inter> A i) . of_bool (p \<Turnstile> ds)) + (\<Sum>p \<in> ((\<Omega> - \<Omega>\<^sub>T ds) \<inter> A i) . of_bool (p \<Turnstile> ds))" using t_partition
+        by (metis Diff_Int_distrib2 Diff_disjoint \<Omega>_def \<Omega>_fin finite_Int inf_top_right
+            sum.union_disjoint)
+      also have "... = (\<Sum>p \<in> (\<Omega>\<^sub>T ds \<inter> A i) . of_bool (p \<Turnstile> ds))" using \<Omega>\<^sub>T_def by auto
+      also have "... = (\<Sum>p \<in> (\<Omega>\<^sub>T ds \<inter> A i) . 1)" using  \<Omega>\<^sub>T_def by auto
+      also have "... = card (\<Omega>\<^sub>T ds \<inter> A i)" using card_def by simp
+      finally show "(\<Sum>p\<in>A i. of_bool (p \<Turnstile> ds)) = card (\<Omega>\<^sub>T ds \<inter> A i)" by simp
+    qed
+    moreover have "(\<Sum>i . ennreal (card (\<Omega>\<^sub>T ds \<inter> A i))) = ennreal (card (\<Union>i. (\<Omega>\<^sub>T ds \<inter> A i)))" 
+    proof -
+      let ?A = "range (\<lambda>i. \<Omega>\<^sub>T ds \<inter> A i)"
+      have "\<forall>x \<in> ?A . finite x" using \<Omega>\<^sub>T_fin by simp
+      moreover have "disjoint ?A" using disjoint disjoint_family_on_def sorry
+      ultimately have "sum card ?A = card (\<Union> ?A)" using card_Union_disjoint by metis
+      hence "(\<Sum>i . (card (\<Omega>\<^sub>T ds \<inter> A i))) = card (\<Union>i . (\<Omega>\<^sub>T ds \<inter> A i))"  sorry
+      show ?thesis sorry
+    qed
+    ultimately show ?thesis
+      by (metis (mono_tags, lifting) of_nat_of_bool
+          of_nat_sum sum.cong suminf_cong)
+    qed
+(*>*)
+
+    thus "(\<Sum>i . \<mu> (A i)) = (\<mu> (\<Union> (range A)))" using simp_s simp_u by presburger
 qed
 
-end
-end
+text \<open>Wenig überraschend ist damit ds\_measure ein Wahrscheinlichkeitsraum. 
+Bzw. Pr ist tatsächlich ein Wahrscheinlichkeitsmaß mit Dichte f. Und wir können alle Theoreme von Isabelle HOL-Probability benutzen.\<close>
+interpretation model_space: prob_space "ds_measure"
+proof (intro prob_spaceI)
+  have "\<mu> \<Omega> = 1" using \<mu>_sum by simp
+  moreover have "(space ds_measure) = \<Omega>" by simp
+  moreover have "emeasure ds_measure \<Omega>  = \<mu> \<Omega>" 
+  proof - 
+     have  "sigma_algebra \<Omega> (Pow \<Omega>)"by (simp add: sigma_algebra_Pow) 
+     moreover have "positive (Pow \<Omega>) \<mu>" unfolding positive_def using Pr_def by simp 
+     moreover have "countably_additive (Pow \<Omega>) \<mu>" using sigma_sum by simp
+     ultimately show ?thesis using emeasure_measure_of_sigma by auto
+  qed
+  ultimately show "emeasure ds_measure (space ds_measure) = 1" by auto
+qed
 
+(*<*)
+end
+end
+(*>*)

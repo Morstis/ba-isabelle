@@ -3,11 +3,11 @@ session isabell = HOL +
 
   sessions
     "HOL-Library"
+    "HOL-Probability"
 
-  theories
-    definitions
-    theorems 
-    probability
+theories
+    base
+    newDefinitions
 
   document_files
     "root.tex"
