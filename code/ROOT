@@ -1,13 +1,13 @@
-session isabell = HOL +
+session doj = "HOL-Probability" +
   options [document = pdf, document_output = "output"]
 
   sessions
     "HOL-Library"
-    "HOL-Probability"
 
   theories
     base
     newDefinitions
+    Doj
 
   document_files
     "root.tex"

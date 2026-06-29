@@ -1,6 +1,6 @@
 (*<*)
 theory newDefinitions
-  imports Main "HOL.Rat" "HOL-Library.LaTeXsugar" "HOL-Probability.Probability"  base 
+  imports Main "HOL-Probability.Probability" base 
 begin
 
 declare [[quick_and_dirty = true]]
@@ -40,7 +40,7 @@ proof -
   have "((UNIV :: literal set) = range Pos \<union> range Neg)"
     by (metis literal.exhaust UNIV_eq_I Un_iff rangeI)
   thus ?thesis
-    using finsen by (metis finite_Un finite_imageI) 
+    using finsen by (metis finite_Un finite_imageI)
 qed
 (*>*)
 
@@ -265,5 +265,5 @@ qed
 
 (*<*)
 end
-end
 (*>*)
+

@@ -28,7 +28,7 @@ proof -
   show ?thesis
     using finite_positions
     using Finite_Set.finite_set infinite_super subset_UNIV
-   by blast
+   by metis
 qed
 (*>*)
 
@@ -207,6 +207,5 @@ proof -
 qed
 (*>*)
 (*<*)
-end
 end
 (*>*)
